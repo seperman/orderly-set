@@ -13,3 +13,4 @@ htmlcov
 .python-version
 build
 .idea
+coverage.xml

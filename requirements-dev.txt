@@ -2,3 +2,4 @@ pytest
 black
 mypy
 pre-commit
+pytest-cov==5.0.0
