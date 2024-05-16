@@ -17,8 +17,8 @@ Significant changes in major and minor releases of this library:
 ## Version 4.1 (January 2022)
 
 - Packaged using flit. Wheels now exist, and setuptools is no longer required.
-- This package now has a typical package structure, instead of being a single module. The code is in `ordered_set/__init__.py` instead of `ordered_set.py`.
-- There is an `ordered_set/py.typed` so that type checkers know about the types.
+- This package now has a typical package structure, instead of being a single module. The code is in `orderly_set/__init__.py` instead of `orderly_set.py`.
+- There is an `orderly_set/py.typed` so that type checkers know about the types.
 - Use the type aliases `SetLike[T]` and `OrderedSetInitializer[T]` to simplify some types.
 - Updated the way overloaded type signatures are written to what MyPy currently expects.
 - Minimum Python version is 3.7.

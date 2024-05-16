@@ -14,13 +14,13 @@ and released under the MIT license."""
 
 __version__ = "5.2.0"
 __description__ = (
-    "StableSet and OrderedSet are sets that remembers their order, "
+    "OrderlySet, StableSet and OrderedSet are sets that remembers their order, "
     "and allows looking up its items by their index in that order."
 )
 __long_description__ = __doc__
-__author__ = "Elia Robyn Lake, Idan Miara"
-__author_email__ = "gh@arborelia.net, idan@miara.com"
-__url__ = "https://github.com/rspeer/ordered-set"
+__author__ = "Elia Robyn Lake, Idan Miara, Sep Dehpour"
+__author_email__ = "gh@arborelia.net, idan@miara.com, sep@zepworks.com"
+__url__ = "https://github.com/seperman/sorted-set"
 __python_requires__ = ">=3.8"
 
 import itertools
@@ -114,7 +114,6 @@ class StableSet(MutableSet[T], Sequence[T]):
             >>> len(StableSet([1, 2]))
             2
         """
-        # return len(self._map)
         return self._map.__len__()
 
     @overload
@@ -260,6 +259,7 @@ class StableSet(MutableSet[T], Sequence[T]):
             other = cls(other)
         return cls(value for value in other if value not in self)
 
+
     def __or__(self, other):
         cls = type(
             self
@@ -296,6 +296,17 @@ class StableSet(MutableSet[T], Sequence[T]):
             return NotImplemented
         return (other - self) | (self - other)
 
+    def __eq__(self, other):
+        if not isinstance(other, Iterable):
+            return False
+        if len(self._map) != len(other):
+            return False
+        if isinstance(other, StableSet):
+            return self._map == other._map
+        if not isinstance(other, list):
+            other = list(other)
+        return list(self._map.keys()) == other
+
     def clear(self) -> None:
         """
         Remove all items from this StableSet.
@@ -329,6 +340,7 @@ class StableSet(MutableSet[T], Sequence[T]):
         Example:
             >>> oset = StableSet()
             >>> oset.append(3)
+            0
             >>> print(oset)
             StableSet([3])
         """
@@ -345,6 +357,7 @@ class StableSet(MutableSet[T], Sequence[T]):
         Example:
             >>> oset = StableSet([1, 2, 3])
             >>> oset.update([3, 1, 5, 1, 4])
+            4
             >>> print(oset)
             StableSet([1, 2, 3, 5, 4])
         """
@@ -648,6 +661,76 @@ class StableSet(MutableSet[T], Sequence[T]):
     def isorderedsuperset(self, other: SetLike, non_consecutive: bool = False):
         return StableSet.isorderedsubset(other, self, non_consecutive)
 
+    def get(self):
+        return next(iter(self._map))
+
+
+class OrderlySet(StableSet[T]):
+
+    def __sub__(self, other):
+        other = other if isinstance(other, (set, frozenset)) else set(other)
+        result = set(self) - other
+        return OrderlySet(result)
+
+    def __rsub__(self, other):
+        other = other if isinstance(other, (set, frozenset)) else set(other)
+        result = other - set(self)
+        return OrderlySet(result)
+
+    def __xor__(self, other):
+        other = other if isinstance(other, (set, frozenset)) else set(other)
+        result = set(self) ^ other
+        return OrderlySet(result)
+
+    __rxor__ = __xor__
+
+    def __eq__(self, other):
+        if not isinstance(other, Iterable):
+            return False
+        if len(self._map) != len(other):
+            return False
+        if isinstance(other, StableSet):
+            return self._map == other._map
+        if not isinstance(other, (set, frozenset)):
+            other = set(other)
+        return set(self._map.keys()) == other
+
+    def __ge__(self, other):
+        if not isinstance(other, Iterable):
+            return False
+        if len(self._map) < len(other):
+            return False
+        if not isinstance(other, (set, frozenset)):
+            other = set(other)
+        return set(self._map.keys()) >= other
+
+    def __gt__(self, other):
+        if not isinstance(other, Iterable):
+            return False
+        if len(self._map) <= len(other):
+            return False
+        if not isinstance(other, (set, frozenset)):
+            other = set(other)
+        return set(self._map.keys()) > other
+
+    def __le__(self, other):
+        if not isinstance(other, Iterable):
+            return False
+        if len(self._map) > len(other):
+            return False
+        if not isinstance(other, (set, frozenset)):
+            other = set(other)
+        return set(self._map.keys()) <= other
+
+    def __lt__(self, other):
+        if not isinstance(other, Iterable):
+            return False
+        if len(self._map) >= len(other):
+            return False
+        if not isinstance(other, (set, frozenset)):
+            other = set(other)
+        return set(self._map.keys()) < other
+
 
 class StableSetEq(StableSet[T]):
     """
@@ -661,21 +744,19 @@ class StableSetEq(StableSet[T]):
 
     def __eq__(self, other: Any) -> bool:
         """
-        Returns true if the containers have the same items.
-        Items order is ignored.
+        Returns true even if the containers don't have the same items in order.
 
         Example:
-            >>> oset = StableSet([1, 3, 2])
+            >>> oset = StableSetEq([1, 3, 2])
             >>> oset == [1, 3, 2]
             True
             >>> oset == [1, 2, 3]
             True
             >>> oset == [2, 3]
             False
-            >>> oset == StableSet([3, 2, 1])
+            >>> oset == StableSetEq([3, 2, 1])
             True
         """
-
         if not isinstance(other, AbstractSet):
             try:
                 other = set(other)
@@ -918,3 +999,220 @@ class OrderedSet(StableSet[T]):
         self._update_items(
             [item for item in self._items if item not in items_to_remove] + items_to_add
         )
+
+
+class SortedSet:
+
+    def __init__(self, *args, set_=None, **kwargs):
+        self._sorted = None
+        if set_:
+            self.set_ = set_
+        else:
+            self.set_ = set(*args, **kwargs)
+
+    def __iter__(self):
+        yield from self._get_sorted()
+
+    def __str__(self) -> str:
+        if not self:
+            return f"{self.__class__.__name__}()"
+        return f"{self.__class__.__name__}({self._get_sorted()!r})"
+
+
+    __repr__ = __str__
+
+    def _get_sorted(self, reverse=False):
+        if self._sorted is None:
+            try:
+                self._sorted = sorted(self.set_, reverse=reverse)
+            except Exception:
+                self._sorted = sorted(self.set_, key=lambda x: str(x), reverse=reverse)
+        return self._sorted
+
+    def get(self):
+        """
+        Get a random element
+        """
+        return next(iter(self.set_))
+
+    def __and__(self, other):
+        # Intersection
+        result = self.set_ & other
+        return SortedSet(set_=result)
+
+    intersection = __and__
+
+    __rand__ = __and__
+
+    def intersection_update(self, other):
+        self.set_.intersection_update(other)
+
+    def __or__(self, other):
+        # Union
+        result = self.set_ | other
+        return SortedSet(set_=result)
+
+    union = __ror__ = __or__
+
+    def __sub__(self, other):
+        # Difference
+        result = self.set_ - other
+        return SortedSet(set_=result)
+
+    difference = __sub__
+
+    def difference_update(self, *sets):
+        self._sorted = None
+        self.set_.difference_update(*sets)
+
+    def isdisjoint(self, other):
+        return self.set_.isdisjoint(other)
+
+    def __xor__(self, other):
+        # Symmetric difference
+        result = self.set_ ^ other
+        return SortedSet(set_=result)
+
+    symmetric_difference = __rxor__ = __xor__
+
+    def symmetric_difference_update(self, other):
+        self._sorted = None
+        self.set_.symmetric_difference_update(other)
+
+    def __rsub__(self, other):
+        result = other - self.set_
+        return SortedSet(set_=result)
+
+    def add(self, item):
+        self._sorted = None
+        self.set_.add(item)
+
+    def clear(self):
+        self._sorted = None
+        self.set_.clear()
+
+    def discard(self, key):
+        self._sorted = None
+        self.set_.discard(key)
+
+    def copy(self):
+        return SortedSet(set_=set(self.set_))
+
+    def __le__(self, other):
+        return self.set_.issubset(other)
+
+    issubset = __le__
+
+    def __lt__(self, other):
+        return self.set_ < other
+
+    def __ge__(self, other):
+        return self.set_.issuperset(other)
+
+    issuperset = __ge__
+
+    def __gt__(self, other):
+        return self.set_ > other
+
+    def remove(self, key):
+        self._sorted = None
+        self.set_.remove(key)
+
+    def update(self, sequence):
+        self._sorted = None
+        self.set_.update(sequence)
+
+    def __len__(self):
+        return len(self.set_) if self.set_ else 0
+
+    def __eq__(self, other):
+        if not isinstance(other, Iterable):
+            return False
+        if len(self.set_) != len(other):
+            return False
+        if isinstance(other, SortedSet):
+            return self.set_ == other.set_
+        if not isinstance(other, (set, frozenset)):
+            other = set(other)
+        return self.set_ == other
+
+    def __reversed__(self):
+        if self._sorted is None:
+            self._get_sorted()
+        return reversed(self._sorted)
+
+    def __getitem__(self, index):
+        items = self._get_sorted()
+
+        if isinstance(index, int):
+            return items[index]
+        elif isinstance(index, slice) and index == SLICE_ALL:
+            return self.copy()
+        if isinstance(index, Iterable):
+            return [items[i] for i in index]
+        elif isinstance(index, slice) or hasattr(index, "__index__"):
+            result = items[index]
+            if isinstance(result, list):
+                return self.__class__(result)
+            else:
+                return result
+        else:
+            raise TypeError(f"Don't know how to index a SortedSet by {index}")
+
+    def index(self, key):  # NOQA
+        """
+        Get the index of a given entry, raising an IndexError if it's not present
+
+        `key` can be an iterable of entries that is not a string, in which case
+        this returns a list of indices.
+
+        Example:
+            >>> oset = StableSet([1, 2, 3])
+            >>> oset.index(2)
+            1
+        """
+        items = self._get_sorted()
+        try:
+            if isinstance(key, Iterable) and not _is_atomic(key):
+                return [self.index(subkey) for subkey in key]
+            for index, item in enumerate(items):
+                if item == key:
+                    return index
+            raise KeyError(key)
+            # return list(self._map.keys()).index(key)
+        except ValueError:
+            raise KeyError(key)
+
+    # Provide some compatibility with pd.Index
+    get_loc = index
+    get_indexer = index
+
+    def pop(self, index=None):
+        if index is None:
+            self._sorted = None
+            return self.set_.pop()
+        items = self._get_sorted()
+        result = items.pop(index)
+        self.set_.remove(result)
+        return result
+
+    def isorderedsubset(self: SetLike, other: SetLike, non_consecutive: bool = False):
+        if len(self) > len(other):
+            return False
+        if non_consecutive:
+            i = 0
+            self_len = len(self)
+            for other_item in other:
+                if other_item == self[i]:
+                    i += 1
+                    if i == self_len:
+                        return True
+            return False
+        else:
+            for self_item, other_item in zip(self, other):
+                if not self_item == other_item:
+                    return False
+            return True
+
+    def isorderedsuperset(self, other: SetLike, non_consecutive: bool = False):
+        return StableSet.isorderedsubset(other, self, non_consecutive)

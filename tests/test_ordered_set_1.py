@@ -9,12 +9,16 @@ from pathlib import Path
 
 import pytest
 
-from ordered_set.test import (
+from tests import (
+    StableSet,
     all_sets,
-    ordered_sets,
+    all_sets_except_orderly_set,
+    SortedSet,
     sets_and_stable_sets,
-    stable_and_ordered_sets,
-    stableeq_and_ordered_sets,
+    stable_and_orderly_sets,
+    stableeq_and_orderly_sets,
+    OrderedSet,
+    stable_and_orderly_sets_except_sorted_set,
 )
 
 
@@ -32,13 +36,16 @@ def test_empty_pickle(set_t):
     assert empty_roundtrip == empty_oset
 
 
-@pytest.mark.parametrize("set_t", stable_and_ordered_sets)
+@pytest.mark.parametrize("set_t", stable_and_orderly_sets)
 def test_order(set_t):
     set1 = set_t("abracadabra")
     assert len(set1) == 5
     set2 = set_t(["a", "b", "r", "c", "d"])
     assert set1 == set2
-    assert list(reversed(set1)) == ["d", "c", "r", "b", "a"]
+    if set_t is SortedSet:
+        assert list(reversed(set1)) == ['r', 'd', 'c', 'b', 'a']
+    else:
+        assert list(reversed(set1)) == ["d", "c", "r", "b", "a"]
 
 
 @pytest.mark.parametrize("set_t", all_sets)
@@ -52,21 +59,29 @@ def test_binary_operations(set_t):
     assert set1 - set2 == set_t(["r", "c", "d"])
 
 
-@pytest.mark.parametrize("set_t", stable_and_ordered_sets)
+@pytest.mark.parametrize("set_t", stable_and_orderly_sets)
 def test_indexing(set_t):
     set1 = set_t("abracadabra")
     assert set1[0] == "a"
-    assert set1[3] == "c"
+    if set_t is SortedSet:
+        assert set1[3] == "d"
+    else:
+        assert set1[3] == "c"
     assert set1[:] == set1
     assert set1.copy() == set1
     assert set1 is set1
     assert set1[:] is not set1
     assert set1.copy() is not set1
 
-    assert set1[[1, 2]] == ["b", "r"]
-    assert set1[1:3] == set_t(["b", "r"])
     assert set1.index("b") == 1
-    assert set1.index(["b", "r"]) == [1, 2]
+    if set_t is SortedSet:
+        assert set1[[1, 2]] == ["b", "c"]
+        assert set1[1:3] == set_t(["b", "c"])
+        assert set1.index(["b", "r"]) == [1, 4]
+    else:
+        assert set1[[1, 2]] == ["b", "r"]
+        assert set1[1:3] == set_t(["b", "r"])
+        assert set1.index(["b", "r"]) == [1, 2]
     with pytest.raises(KeyError):
         set1.index("br")
 
@@ -96,21 +111,28 @@ class FancyIndexTester:
         raise TypeError
 
 
-@pytest.mark.parametrize("set_t", stable_and_ordered_sets)
+@pytest.mark.parametrize("set_t", stable_and_orderly_sets)
 def test_fancy_index_class(set_t):
     set1 = set_t("abracadabra")
     indexer = FancyIndexTester([1, 0, 4, 3, 0, 2])
-    assert "".join(set1[indexer]) == "badcar"
+    if set_t is SortedSet:
+        assert "".join(set1[indexer]) == "bardac"
+    else:
+        assert "".join(set1[indexer]) == "badcar"
 
 
-@pytest.mark.parametrize("set_t", stable_and_ordered_sets)
+@pytest.mark.parametrize("set_t", stable_and_orderly_sets)
 def test_pandas_compat(set_t):
     set1 = set_t("abracadabra")
     assert set1.get_loc("b") == 1
-    assert set1.get_indexer(["b", "r"]) == [1, 2]
+
+    if set_t is SortedSet:
+        assert set1.get_indexer(["b", "r"]) == [1, 4]
+    else:
+        assert set1.get_indexer(["b", "r"]) == [1, 2]
 
 
-@pytest.mark.parametrize("set_t", stable_and_ordered_sets)
+@pytest.mark.parametrize("set_t", stable_and_orderly_sets)
 def test_tuples(set_t):
     set1 = set_t()
     tup = ("tuple", 1)
@@ -119,7 +141,7 @@ def test_tuples(set_t):
     assert set1[0] == tup
 
 
-@pytest.mark.parametrize("set_t", stable_and_ordered_sets)
+@pytest.mark.parametrize("set_t", stable_and_orderly_sets)
 def test_remove(set_t):
     set1 = set_t("abracadabra")
 
@@ -127,13 +149,14 @@ def test_remove(set_t):
     set1.remove("b")
 
     assert set1 == set_t("rcd")
-    assert set1[0] == "r"
-    assert set1[1] == "c"
-    assert set1[2] == "d"
+    if set_t is not SortedSet:
+        assert set1[0] == "r"
+        assert set1[1] == "c"
+        assert set1[2] == "d"
 
-    assert set1.index("r") == 0
-    assert set1.index("c") == 1
-    assert set1.index("d") == 2
+        assert set1.index("r") == 0
+        assert set1.index("c") == 1
+        assert set1.index("d") == 2
 
     assert "a" not in set1
     assert "b" not in set1
@@ -162,23 +185,24 @@ def test_clear(set_t):
     assert set1 == set_t()
 
 
-@pytest.mark.parametrize("set_t", stable_and_ordered_sets)
+@pytest.mark.parametrize("set_t", stable_and_orderly_sets)
 def test_update(set_t):
     set1 = set_t("abcd")
     result = set1.update("efgh")
-
-    assert result == 7
+    if set_t is not SortedSet:
+        assert result == 7
     assert len(set1) == 8
     assert "".join(set1) == "abcdefgh"
 
     set2 = set_t("abcd")
     result = set2.update("cdef")
-    assert result == 5
+    if set_t is not SortedSet:
+        assert result == 5
     assert len(set2) == 6
     assert "".join(set2) == "abcdef"
 
 
-@pytest.mark.parametrize("set_t", stable_and_ordered_sets)
+@pytest.mark.parametrize("set_t", stable_and_orderly_sets_except_sorted_set)
 def test_pop(set_t):
     set1 = set_t("ab")
     elem = set1.pop()
@@ -190,7 +214,7 @@ def test_pop(set_t):
     pytest.raises(KeyError, set1.pop)
 
 
-@pytest.mark.parametrize("set_t", stable_and_ordered_sets)
+@pytest.mark.parametrize("set_t", stable_and_orderly_sets)
 def test_pop_by_index(set_t):
     set1 = set_t("abcde")
     elem = set1.pop(1)
@@ -211,7 +235,7 @@ def test_pop_by_index(set_t):
     pytest.raises(KeyError, set1.pop)
 
 
-@pytest.mark.parametrize("set_t", stable_and_ordered_sets)
+@pytest.mark.parametrize("set_t", stable_and_orderly_sets_except_sorted_set)
 def test_popitem(set_t):
     set1 = set_t("abcd")
     elem = set1.popitem()
@@ -229,7 +253,7 @@ def test_popitem(set_t):
     pytest.raises(KeyError, set1.popitem)
 
 
-@pytest.mark.parametrize("set_t", stable_and_ordered_sets)
+@pytest.mark.parametrize("set_t", stable_and_orderly_sets_except_sorted_set)
 def test_move_to_end(set_t):
     set1 = set_t("abcd")
     set1.move_to_end("a")
@@ -272,11 +296,12 @@ def test_ordered_equality(set_t):
     # Ordered set checks order against sequences.
     set1 = set_t([1, 2])
     assert set1 == set_t([1, 2])
-    assert set1 == {1, 2}
-    assert set1 == {2, 1}
+    if set_t is not StableSet:
+        assert set1 == {1, 2}
+        assert set1 == {2, 1}
 
 
-@pytest.mark.parametrize("set_t", stableeq_and_ordered_sets)
+@pytest.mark.parametrize("set_t", stableeq_and_orderly_sets)
 def test_ordered_equality_non_set(set_t):
     set1 = set_t([1, 2])
     assert set1 == [1, 2]
@@ -285,13 +310,14 @@ def test_ordered_equality_non_set(set_t):
 
 
 @pytest.mark.parametrize("set_t", sets_and_stable_sets)
-def test_ordered_equality_unordered_sets(set_t):
+def test_ordered_equality_unorderly_sets(set_t):
     set1 = set_t([1, 2])
     assert set1 == set_t([2, 1])
-    assert set1 == {2, 1}
+    if set_t is not StableSet:
+        assert set1 == {2, 1}
 
 
-@pytest.mark.parametrize("set_t", ordered_sets)
+@pytest.mark.parametrize("set_t", [OrderedSet])
 def test_ordered_inequality(set_t):
     # Equal Ordered set checks order against sequences.
     set1 = set_t([1, 2])
@@ -319,17 +345,18 @@ def test_comparisons(set_t):
 @pytest.mark.parametrize("set_t", all_sets)
 def test_unordered_equality(set_t):
     # Unordered set checks order against non-sequences.
-    assert set_t([1, 2]) == {1, 2}
-    assert set_t([1, 2]) == frozenset([2, 1])
+    if set_t is not StableSet:
+        assert set_t([1, 2]) == {1, 2}
+        assert set_t([1, 2]) == frozenset([2, 1])
+        assert set_t([1, 2]) == {2: 2, 1: 1}.keys()
+        assert set_t([1, 2]) == OrderedDict([(2, 2), (1, 1)]).keys()
 
     assert set_t([1, 2]) == {1: 1, 2: 2}.keys()
-    assert set_t([1, 2]) == {2: 2, 1: 1}.keys()
-
-    assert set_t([1, 2]) == OrderedDict([(2, 2), (1, 1)]).keys()
 
 
-@pytest.mark.parametrize("set_t", ordered_sets)
-def test_unordered_equality_ordered_set(set_t):
+
+@pytest.mark.parametrize("set_t", [OrderedSet])
+def test_unordered_equality_orderly_set(set_t):
     assert set_t([1, 2]) == {1: 1, 2: 2}.values()
     assert set_t([1, 2]) == {1: "a", 2: "b"}
 
@@ -419,7 +446,11 @@ def _operator_consistency_testdata(set_t):
 
 
 datasets_t = list(_operator_consistency_testdata(set_t) for set_t in all_sets)
+datasets_t_except_orderly_set = list(_operator_consistency_testdata(set_t) for set_t in all_sets_except_orderly_set)
 datasets = [item for sublist in datasets_t for item in sublist]
+datasets_except_orderly_set = [item for sublist in datasets_t_except_orderly_set for item in sublist]
+
+
 
 
 @pytest.mark.parametrize("a, b", datasets)
@@ -440,7 +471,7 @@ def test_operator_consistency_difference(a, b):
     check_results_([result1, result2, result3], datas=(a, b), name="difference")
 
 
-@pytest.mark.parametrize("a, b", datasets)
+@pytest.mark.parametrize("a, b", datasets_except_orderly_set)
 def test_operator_consistency_xor(a, b):
     result1 = a.copy()
     result1.symmetric_difference_update(b)
@@ -503,7 +534,7 @@ def test_json(set_t):
     assert a == b
 
 
-@pytest.mark.parametrize("set_t", stable_and_ordered_sets)
+@pytest.mark.parametrize("set_t", stable_and_orderly_sets)
 def test_stability(set_t, override=False):
     """if you run this test twice it should fail with `set` and succeed with `StableSet`"""
     items = "abcdabcd"
@@ -525,3 +556,8 @@ def test_stability(set_t, override=False):
         new_sitems = list(set_t(items))
         print(new_sitems)
         assert sitems == new_sitems, f"{sitems} != {new_sitems}"
+
+
+def test_equality_in_stable_set():
+    oset = StableSet([1, 3, 2])
+    assert oset == [1, 3, 2]

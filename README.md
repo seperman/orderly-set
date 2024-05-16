@@ -1,35 +1,37 @@
-[![Pypi](https://img.shields.io/pypi/v/ordered-set.svg)](https://pypi.python.org/pypi/ordered-set)
+# Orderly Set
+
+Orderly Set is a package containing multiple implementations of Ordered Set.
+
+
+## OrderlySet
+
+This implementation keeps the order in all set operations except set difference operations.
+As a result, it can do set difference operations much faster than other implementations. Still 2X slower than of Python's built-in set.
+
+
+## StableSet
 
 A StableSet is a mutable set that remembers its insertion order.
 Featuring: Fast O(1) insertion, deletion, iteration and membership testing.
 But slow O(N) Index Lookup.
+
+## OrderedSet
 
 An OrderedSet is a mutable data structure that is a hybrid of a list and a set.
 It remembers its insertion order so that every entry has an index that can be looked up. 
 Featuring: O(1) Index lookup, insertion, iteration and membership testing.
 But slow O(N) Deletion.
 
-Both have similar interfaces but differ in respect of their implementation and performance.
 
-## Installation
+# Installation
 
-`ordered_set` is available on PyPI and packaged as a wheel. You can list it
-as a dependency of your project, in whatever form that takes.
+`pip install orderly-set`
 
-To install it into your current Python environment:
-
-    pip install ordered-set
-
-To install the code for development, after checking out the repository:
-
-    pip install flit
-    flit install
-
-## Usage examples
+# Usage examples
 
 An OrderedSet is created and used like a set:
 
-    >>> from ordered_set import OrderedSet
+    >>> from orderly_set import OrderedSet
 
     >>> letters = OrderedSet('abracadabra')
 
@@ -93,30 +95,61 @@ a variable as having the type `OrderedSet[str]` or `OrderedSet[Tuple[int,
 str]]`.
 
 
-## OrderedSet in data science applications
-
-An OrderedSet can be used as a bi-directional mapping between a sparse
-vocabulary and dense index numbers. As of version 3.1, it accepts NumPy arrays
-of index numbers as well as lists.
-
-This combination of features makes OrderedSet a simple implementation of many
-of the things that `pandas.Index` is used for, and many of its operations are
-faster than the equivalent pandas operations.
-
-For further compatibility with pandas.Index, `get_loc` (the pandas method for
-looking up a single index) and `get_indexer` (the pandas method for fancy
-indexing in reverse) are both aliases for `index` (which handles both cases
-in OrderedSet).
-
-
-## Authors
+# Authors
 
 OrderedSet was implemented by Elia Robyn Lake (maiden name: Robyn Speer).
 StableSet was implemented by Idan Miara, built upon the foundations of OrderedSet.
 Jon Crall contributed changes and tests to make it fit the Python set API.
 Roman Inflianskas added the original type annotations.
+Sep Dehpour added OrderlySet.
 
-## Comparisons
+# Comparisons
+
+```
+-- initialize a set --
+Using Python dict time: 4.13
+set time: 2.98
+ordered_set.OrderedSet time: 15.77
+orderly_set.OrderedSet time: 15.25
+StableSet time: 4.78
+OrderlySet time: 4.38
+SortedSet time: 3.09
+
+-- update a set --
+Using Python dict: 6.77
+set time: 2.46
+ordered_set.OrderedSet time: 10.17
+orderly_set.OrderedSet time: 10.06
+StableSet time: 7.16
+OrderlySet time: 6.77
+SortedSet time: 2.46
+
+-- update a set and get item --
+ordered_set.OrderedSet time: 29.98
+orderly_set.OrderedSet time: 29.57
+StableSet time: 14.31
+OrderlySet time: 14.23
+SortedSet time: 9.03
+
+-- set symmetric difference (xor) --
+set time: 5.368663903005654
+ordered_set.OrderedSet time: 39.25
+orderly_set.OrderedSet time: 80.31
+StableSet time: 42.81
+OrderlySet time: 11.44
+SortedSet time: 3.87
+
+-- set difference (-) --
+set time: 3.7398674299911363
+ordered_set.OrderedSet time: 22.39
+orderly_set.OrderedSet time: 38.00
+StableSet time: 22.30
+OrderlySet time: 8.92
+SortedSet time: 3.03
+```
+
+Despite what you see in the benchmarks, in DeepDiff OrderlySet performed better than SortedSet.
+
 
 A StableSet is a mutable set that remembers its insertion order.
 Featuring: Fast O(1) insertion, deletion, iteration and membership testing.
@@ -142,11 +175,3 @@ This version of OrderedSet makes different trade-offs for the sake of efficient 
 Its content is a standard Python list instead of a doubly-linked list. This
 provides O(1) lookups by index at the expense of O(N) deletion, as well as
 slightly faster iteration.
-
-## Other implementations 
-
-The included implementation of OrderedSet is fully compatible with the following implementation:
-* https://pypi.org/project/orderedset/ - by Simon Percivall (faster implementation of `OrderedSet` using Cython, which currently only works for Python<3.9)
-
-The included implementation of StableSet is fully compatible with the following implementation:
-* https://pypi.org/project/Ordered-set-37/ - by Xavier Bustamante Talavera (Similar basic implementation for `StableSet`, but named `OrderedSet`)
