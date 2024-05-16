@@ -15,6 +15,10 @@ A StableSet is a mutable set that remembers its insertion order.
 Featuring: Fast O(1) insertion, deletion, iteration and membership testing.
 But slow O(N) Index Lookup.
 
+## StableSetEq
+
+Same as StableSet but the order of items doesn't matter for equality comparisons.
+
 ## OrderedSet
 
 An OrderedSet is a mutable data structure that is a hybrid of a list and a set.
@@ -22,6 +26,10 @@ It remembers its insertion order so that every entry has an index that can be lo
 Featuring: O(1) Index lookup, insertion, iteration and membership testing.
 But slow O(N) Deletion.
 
+
+## SortedSet
+
+SortedSet is basically set but when printed, turned into string, or iterated over, returns the items in alphabetical order.
 
 # Installation
 
