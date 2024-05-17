@@ -1,4 +1,4 @@
-# Orderly Set
+# Orderly Set 5.2.0
 
 Orderly Set is a package containing multiple implementations of Ordered Set.
 

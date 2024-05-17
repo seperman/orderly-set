@@ -1,28 +1,3 @@
-"""A StableSet is a mutable set that remembers its insertion order.
-Featuring: Fast O(1) insertion, deletion, iteration and membership testing.
-But slow O(N) Index Lookup.
-
-An OrderedSet is a mutable data structure that is a hybrid of a list and a set.
-It remembers its insertion order so that every entry has an index that can be looked up.
-Featuring: O(1) Index lookup, insertion, iteration and membership testing.
-But slow O(N) Deletion.
-
-Both have similar interfaces but differ in respect of their implementation and performance.
-
-OrderedSet Based on a recipe originally posted to ActiveState Recipes by Raymond Hettiger,
-and released under the MIT license."""
-
-__version__ = "5.2.0"
-__description__ = (
-    "OrderlySet, StableSet and OrderedSet are sets that remembers their order, "
-    "and allows looking up its items by their index in that order."
-)
-__long_description__ = __doc__
-__author__ = "Elia Robyn Lake, Idan Miara, Sep Dehpour"
-__author_email__ = "gh@arborelia.net, idan@miara.com, sep@zepworks.com"
-__url__ = "https://github.com/seperman/sorted-set"
-__python_requires__ = ">=3.8"
-
 import itertools
 import itertools as it
 from typing import (
@@ -148,6 +123,8 @@ class StableSet(MutableSet[T], Sequence[T]):
             2
         """
         if isinstance(index, int):
+            if index < 0:
+                index = len(self._map) + index
             try:
                 return next(itertools.islice(self._map.keys(), index, index + 1))
             except StopIteration:
@@ -222,6 +199,8 @@ class StableSet(MutableSet[T], Sequence[T]):
         if not self:
             return f"{self.__class__.__name__}()"
         return f"{self.__class__.__name__}({list(self)!r})"
+
+    __str__ = __repr__
 
     def __and__(self, other: SetLike[T]) -> "StableSet[T]":
         # the parent implementation of this is backwards
@@ -666,6 +645,10 @@ class StableSet(MutableSet[T], Sequence[T]):
 
 
 class OrderlySet(StableSet[T]):
+    """
+    OrderlySet keeps the order when adding but if you do difference, subtraction, etc, you lose the order.
+    The new results will have a random order but they will keep that order.
+    """
 
     def __sub__(self, other):
         other = other if isinstance(other, (set, frozenset)) else set(other)
