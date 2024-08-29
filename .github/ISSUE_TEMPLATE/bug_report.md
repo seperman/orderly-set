@@ -16,7 +16,7 @@ Steps to reproduce the behavior
 **Expected behavior**
 A clear and concise description of what you expected to happen.
 
-**OS, DeepDiff version and Python version (please complete the following information):**
+**OS, Orderly-set version and Python version (please complete the following information):**
  - OS: [e.g. Ubuntu]
  - Version [e.g. 20LTS]
  - Python Version [e.g. 3.9.12]
