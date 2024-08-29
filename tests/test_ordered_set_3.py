@@ -5,7 +5,6 @@
 
 from pathlib import Path
 
-import mypy.api
 import pytest
 
 from tests import all_sets, stable_and_orderly_sets, SortedSet, stable_and_orderly_sets_except_sorted_set
@@ -107,6 +106,8 @@ def test_init_empty(set_t):
 @pytest.mark.parametrize("set_t", all_sets)
 def test_typing_mypy(set_t, do_assert: bool = True):
     """Checks the typing values with mypy."""
+    import mypy.api
+
     fixture = TESTS / "_test_mypy.py"
     module = TESTS.parent / "orderly_sets"
     *_, error = mypy.api.run([str(module), str(fixture)])
