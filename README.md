@@ -105,11 +105,7 @@ str]]`.
 
 # Authors
 
-OrderedSet was implemented by Elia Robyn Lake (maiden name: Robyn Speer).
-StableSet was implemented by Idan Miara, built upon the foundations of OrderedSet.
-Jon Crall contributed changes and tests to make it fit the Python set API.
-Roman Inflianskas added the original type annotations.
-Sep Dehpour added OrderlySet.
+Please check the [Authors](AUTHORS.md) file.
 
 # Comparisons
 

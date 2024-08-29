@@ -2,6 +2,10 @@
 
 Significant changes in major and minor releases of this library:
 
+## Version 5.2.x (2024)
+
+- Added Sorted Set and Orderly Set
+
 ## Version 5.2 (February 2022)
 
 - Major refactor
