@@ -72,12 +72,13 @@ class StableSet(MutableSet[T], Sequence[T]):
         StableSet([1, 2, 3])
     """
 
-    __slots__ = ("_map",)
+    __slots__ = ("_map", "_is_mutable")
 
     _map: Dict[T, Any]
 
     def __init__(self, initial: Optional[SetInitializer[T]] = None):
         self._map = dict.fromkeys(initial) if initial else {}
+        self._is_mutable = True
 
     def __len__(self) -> int:
         """
@@ -290,6 +291,9 @@ class StableSet(MutableSet[T], Sequence[T]):
         """
         Remove all items from this StableSet.
         """
+        if self._is_mutable is False:
+            raise ValueError("This object is not mutable.")
+
         self._map.clear()
 
     def copy(self) -> "StableSet[T]":
@@ -323,6 +327,9 @@ class StableSet(MutableSet[T], Sequence[T]):
             >>> print(oset)
             StableSet([3])
         """
+        if self._is_mutable is False:
+            raise ValueError("This object is not mutable.")
+
         self._map[key] = None
         return len(self._map) - 1
 
@@ -340,6 +347,9 @@ class StableSet(MutableSet[T], Sequence[T]):
             >>> print(oset)
             StableSet([1, 2, 3, 5, 4])
         """
+        if self._is_mutable is False:
+            raise ValueError("This object is not mutable.")
+
         other_map = dict.fromkeys(sequence)
         self._map.update(other_map)
         return len(self._map) - 1
@@ -392,6 +402,9 @@ class StableSet(MutableSet[T], Sequence[T]):
             >>> oset.pop()
             3
         """
+        if self._is_mutable is False:
+            raise ValueError("This object is not mutable.")
+
         if not self._map:
             raise KeyError("Set is empty")
         if index == -1:
@@ -408,6 +421,9 @@ class StableSet(MutableSet[T], Sequence[T]):
         """Remove and return an item from the set.
         Items are returned in LIFO order if last is true or FIFO order if false.
         """
+        if self._is_mutable is False:
+            raise ValueError("This object is not mutable.")
+
         if not self._map:
             raise KeyError("Set is empty")
         if last:
@@ -421,6 +437,9 @@ class StableSet(MutableSet[T], Sequence[T]):
         """Move an existing element to the end.
         Raise KeyError if the element does not exist.
         """
+        if self._is_mutable is False:
+            raise ValueError("This object is not mutable.")
+
         self._map.pop(key)
         self._map[key] = None
 
@@ -440,8 +459,9 @@ class StableSet(MutableSet[T], Sequence[T]):
             >>> print(oset)
             StableSet([1, 3])
         """
-        # if key in self:
-        #     del self._map[key]
+        if self._is_mutable is False:
+            raise ValueError("This object is not mutable.")
+
         self._map.pop(key, None)
 
     def union(self, *sets: SetLike[T]) -> "StableSet[T]":
@@ -546,6 +566,9 @@ class StableSet(MutableSet[T], Sequence[T]):
             >>> print(this)
             StableSet([3, 5])
         """
+        if self._is_mutable is False:
+            raise ValueError("This object is not mutable.")
+
         items_to_remove = set()  # type: Set[T]
         for other in sets:
             items_as_set = set(other)  # type: Set[T]
@@ -566,6 +589,8 @@ class StableSet(MutableSet[T], Sequence[T]):
             >>> print(this)
             StableSet([1, 3, 7])
         """
+        if self._is_mutable is False:
+            raise ValueError("This object is not mutable.")
         other = set(other)
         self._map = dict.fromkeys([item for item in self._map if item in other])
 
@@ -642,6 +667,12 @@ class StableSet(MutableSet[T], Sequence[T]):
 
     def get(self):
         return next(iter(self._map))
+
+    def freeze(self):
+        """
+        Once this function is run, the object becomes immutable
+        """
+        self._is_mutable = False
 
 
 class OrderlySet(StableSet[T]):

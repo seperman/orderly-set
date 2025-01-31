@@ -16,7 +16,7 @@ from tests import (
     OrderedSet,
     ordered_sets,
     stable_and_orderly_sets,
-    stableeq_and_orderly_sets,
+    stables,
     stableeq_sets,
     stable_and_orderly_sets_except_sorted_set,
     stableeq_and_orderly_sets_except_sorted_set,
@@ -49,6 +49,23 @@ def test_add_new(set_t, lst: list):
     oset.add(item)
 
     assertEqual(list(oset), lst)
+
+
+@pytest.mark.parametrize("lst", datasets)
+@pytest.mark.parametrize("set_t", stables)
+def test_add_new_when_immutable_fails(set_t, lst: list):
+    oset = set_t(lst)
+    lst = copy.copy(lst)
+
+    item = 10
+    lst.append(item)
+    oset.add(item)
+
+    assertEqual(list(oset), lst)
+    oset.freeze()
+
+    with pytest.raises(ValueError):
+        oset.add("banana")
 
 
 @pytest.mark.parametrize("lst", datasets)

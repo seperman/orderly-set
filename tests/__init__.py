@@ -8,6 +8,7 @@ ordered_sets = [OrderedSet, OrderlySet, SortedSet]
 # ordered_sets += [OrderedSet2]
 
 set_and_stable_sets = [set] + stable_sets
+stables = stableeq_sets + stable_sets
 stableeq_and_orderly_sets = stableeq_sets + ordered_sets
 stableeq_and_orderly_sets_except_sorted_set = stableeq_sets + [OrderedSet, OrderlySet]
 stable_and_orderly_sets = stable_sets + stableeq_sets + ordered_sets
