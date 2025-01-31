@@ -2,6 +2,10 @@
 
 Significant changes in major and minor releases of this library:
 
+## Version 5.3.0 (2025)
+
+- Added freeze() to make stable sets immutable
+
 ## Version 5.2.x (2024)
 
 - Added Sorted Set and Orderly Set
