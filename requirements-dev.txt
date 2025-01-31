@@ -1,6 +1,6 @@
-pytest==8.3.4
+pytest
 black
 mypy
 pre-commit
-pytest-cov==6.0.0
+pytest-cov
 bump2version==1.0.1
