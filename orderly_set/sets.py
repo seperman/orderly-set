@@ -365,7 +365,7 @@ class StableSet(MutableSet[T], Sequence[T]):
         ...
 
     # concrete implementation
-    def index(self, key: T | Sequence[T]) -> int | List[int]:  # pyright: ignore
+    def index(self, key: Union[T, Sequence[T]]) -> Union[int, List[int]]:  # pyright: ignore
         """
         Get the index of a given entry, raising an IndexError if it's not present
 
