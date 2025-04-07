@@ -14,7 +14,6 @@ from typing import (
     TypeVar,
     Union,
     overload,
-    override,
     Hashable,
 )
 
@@ -316,7 +315,6 @@ class StableSet(MutableSet[T], Sequence[T]):
     # Technically type-incompatible with MutableSet, because we return an
     # int instead of nothing. This is also one of the things that makes
     # StableSet convenient to use.
-    @override
     def add(self, key: T) -> int:  # pyright: ignore
         """
         Add `key` as an item to this StableSet, then return its index.
