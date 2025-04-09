@@ -2,6 +2,14 @@
 
 Significant changes in major and minor releases of this library:
 
+## Version 5.3.2 (2025)
+
+- Better support for freezing sets.
+
+## Version 5.3.1 (2025)
+
+- Additional type hints
+
 ## Version 5.3.0 (2025)
 
 - Added freeze() to make stable sets immutable
