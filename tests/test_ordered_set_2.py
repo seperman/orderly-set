@@ -21,6 +21,7 @@ from tests import (
     stable_and_orderly_sets_except_sorted_set,
     stableeq_and_orderly_sets_except_sorted_set,
     SortedSet,
+    StableSet,
 )
 from tests.pytest_util import (
     assertEqual,
@@ -48,7 +49,7 @@ def test_add_new(set_t, lst: list):
     lst.append(item)
     oset.add(item)
 
-    assertEqual(list(oset), lst)
+    assert list(oset) == lst
 
 
 @pytest.mark.parametrize("lst", datasets)
@@ -61,7 +62,7 @@ def test_add_new_when_immutable_fails(set_t, lst: list):
     lst.append(item)
     oset.add(item)
 
-    assertEqual(list(oset), lst)
+    assert list(oset) == lst
     oset.freeze()
 
     with pytest.raises(ValueError):
@@ -76,7 +77,7 @@ def test_add_existing(set_t, lst: list):
 
     oset.add(1)
     oset.add(3)
-    assertEqual(list(oset), lst)
+    assert list(oset) == lst
 
 
 @pytest.mark.parametrize("lst", datasets)
@@ -95,11 +96,11 @@ def test_pop(set_t):
     oset = set_t([1, 2, 3])
 
     v = oset.pop()
-    assertEqual(v, 3)
+    assert v == 3
     assertNotIn(v, oset)
 
     v = oset.popitem(last=False)
-    assertEqual(v, 1)
+    assert v == 1
     assertNotIn(v, oset)
 
 
@@ -112,7 +113,7 @@ def test_remove(set_t, lst: list):
     oset.remove(3)
     lst.remove(3)
 
-    assertEqual(list(oset), lst)
+    assert list(oset) == lst
 
 
 @pytest.mark.parametrize("set_t", all_sets)
@@ -126,11 +127,11 @@ def test_clear(set_t):
     ws[val] = 1
     oset.clear()
 
-    assertEqual(list(oset), [])
+    assert list(oset) == []
 
     del val
     gc.collect()
-    assertEqual(list(ws), [])
+    assert list(ws) == []
 
 
 @pytest.mark.parametrize("lst", datasets)
@@ -140,7 +141,7 @@ def test_copy(set_t, lst: list):
     oset2 = oset1.copy()
 
     assertIsNot(oset1, oset2)
-    assertEqual(oset1, oset2)
+    assert oset1 == oset2
 
     oset1.clear()
     assertNotEqual(oset1, oset2)
@@ -151,10 +152,10 @@ def test_copy(set_t, lst: list):
 def test_reduce(set_t, lst: list):
     oset = set_t(lst)
     oset2 = copy.copy(oset)
-    assertEqual(oset, oset2)
+    assert oset == oset2
 
     oset3 = pickle.loads(pickle.dumps(oset))
-    assertEqual(oset, oset3)
+    assert oset == oset3
 
     oset.add(-1)
     if set_t is SortedSet:
@@ -173,33 +174,39 @@ def test_difference_and_update(set_t, lst: list):
 
     # right hand
     oset3 = oset2 - list1
-    assertEqual(oset3, set_t([4, 5]))
-    assertEqual(oset2.difference(oset1), oset3)
+    assert oset3 == set_t([4, 5])
+    assert oset2.difference(oset1) == oset3
 
     oset3 = list2 - oset1
-    assertEqual(oset3, set_t([4, 5]))
-    assertEqual(oset2.difference(oset1), oset3)
+    assert oset3 == set_t([4, 5])
+    assert oset2.difference(oset1) == oset3
 
     oset3 = oset1 - oset2
-    assertEqual(oset3, set_t([1, 2]))
-    assertEqual(oset1.difference(oset2), oset3)
+    assert oset3 == set_t([1, 2])
+    assert oset1.difference(oset2) == oset3
 
     # left hand
     oset3 = oset1 - list2
-    assertEqual(oset3, set_t([1, 2]))
-    assertEqual(oset1.difference(oset2), oset3)
+    assert oset3 == set_t([1, 2])
+    assert oset1.difference(oset2) == oset3
 
     oset3 = list1 - oset2
-    assertEqual(oset3, set_t([1, 2]))
-    assertEqual(oset1.difference(oset2), oset3)
+    assert oset3 == set_t([1, 2])
+    assert oset1.difference(oset2) == oset3
 
     oset4 = oset1.copy()
     oset4 -= oset2
-    assertEqual(oset4, oset3)
+    assert oset4 == oset3
 
     oset5 = oset1.copy()
     oset5.difference_update(oset2)
-    assertEqual(oset5, oset3)
+    assert oset5 == oset3
+
+    if isinstance(oset5, StableSet):
+        oset5.freeze()
+        with pytest.raises(ValueError):
+            oset5 -= oset2
+
 
 
 @pytest.mark.parametrize("set_t", all_sets)
@@ -208,16 +215,21 @@ def test_intersection_and_update(set_t):
     oset2 = set_t([3, 4, 5])
 
     oset3 = oset1 & oset2
-    assertEqual(oset3, set_t([3]))
+    assert oset3 == set_t([3])
 
     oset4 = oset1.copy()
     oset4 &= oset2
 
-    assertEqual(oset4, oset3)
+    assert oset4 == oset3
 
     oset5 = oset1.copy()
     oset5.intersection_update(oset2)
-    assertEqual(oset5, oset3)
+    assert oset5 == oset3
+
+    if isinstance(oset5, StableSet):
+        oset5.freeze()
+        with pytest.raises(ValueError):
+            oset5 &= oset2
 
 
 @pytest.mark.parametrize("set_t", all_sets)
@@ -272,17 +284,17 @@ def test_symmetric_difference_and_update(set_t):
     oset2 = set_t([2, 3, 4])
 
     oset3 = oset1 ^ oset2
-    assertEqual(oset3, set_t([1, 4]))
+    assert oset3 == set_t([1, 4])
 
     oset4 = oset1.copy()
-    assertEqual(oset4.symmetric_difference(oset2), oset3)
+    assert oset4.symmetric_difference(oset2) == oset3
 
     oset4 ^= oset2
-    assertEqual(oset4, oset3)
+    assert oset4 == oset3
 
     oset5 = oset1.copy()
     oset5.symmetric_difference_update(oset2)
-    assertEqual(oset5, oset3)
+    assert oset5 == oset3
 
 
 @pytest.mark.parametrize("lst", datasets)
@@ -292,72 +304,78 @@ def test_union_and_update(set_t, lst: list):
     lst = copy.copy(lst)
 
     oset2 = oset | [3, 9, 27]
-    assertEqual(oset2, lst + [27])
+    assert oset2 == lst + [27]
 
     oset2 = [3, 9, 27] | oset
-    assertEqual(oset2, [3, 9, 27, 0, 1, 2, 4, 5, 6, 7, 8])
+    assert oset2 == [3, 9, 27, 0, 1, 2, 4, 5, 6, 7, 8]
 
     # make sure original oset isn't changed
-    assertEqual(oset, lst)
+    assert oset == lst
 
     oset1 = set_t(lst)
     oset2 = set_t(lst)
 
     oset3 = oset1 | oset2
-    assertEqual(oset3, oset1)
+    assert oset3 == oset1
 
-    assertEqual(oset3, oset1.union(oset2))
+    assert oset3 == oset1.union(oset2)
 
     oset1 |= set_t("abc")
-    assertEqual(oset1, oset2 | "abc")
+    assert oset1 == oset2 | "abc"
 
     oset1 = set_t(lst)
     oset1.update("abc")
-    assertEqual(oset1, oset2 | "abc")
+    assert oset1 == oset2 | "abc"
+
+    if isinstance(oset1, StableSet):
+        oset1.freeze()
+        with pytest.raises(ValueError):
+            oset1 |= oset2
+
 
 
 @pytest.mark.parametrize("set_t", stable_and_orderly_sets_except_sorted_set)
 def test_union_with_iterable(set_t):
     oset1 = set_t([1])
 
-    assertEqual(oset1 | [2, 1], set_t([1, 2]))
+    assert oset1 | [2, 1] == set_t([1, 2])
     oset2 = [2] | oset1
-    assertEqual(oset2, set_t([2, 1]))
+    assert oset2 == set_t([2, 1])
     oset2 = [1, 2] | set_t([3, 1, 2, 4])
-    assertEqual(oset2, set_t([1, 2, 3, 4]))
+    assert oset2 == set_t([1, 2, 3, 4])
 
     # union with unordered set should work, though the order will be arbitrary
     oset2 = oset1 | set([2])
-    assertEqual(oset2, set_t([1, 2]))
+    assert oset2 == set_t([1, 2])
     oset2 = set([2]) | oset1
-    assertEqual(oset2, set_t([2, 1]))
+    assert oset2 == set_t([2, 1])
 
 
 @pytest.mark.parametrize("set_t", stable_and_orderly_sets_except_sorted_set)
 def test_symmetric_difference_with_iterable(set_t):
     oset1 = set_t([1])
 
-    assertEqual(oset1 ^ [1], set_t([]))
-    assertEqual([1] ^ oset1, set_t([]))
+    assert oset1 ^ [1] == set_t([])
+    assert [1] ^ oset1 == set_t([])
 
-    assertEqual(set_t([3, 1, 4, 2]) ^ [3, 4], set_t([1, 2]))
-    assertEqual([3, 1, 4, 2] ^ set_t([3, 4]), set_t([1, 2]))
+    assert set_t([3, 1, 4, 2]) ^ [3, 4] == set_t([1, 2])
+    assert [3, 1, 4, 2] ^ set_t([3, 4]) == set_t([1, 2])
 
-    assertEqual(set_t([3, 1, 4, 2]) ^ set([3, 4]), set_t([1, 2]))
+    assert set_t([3, 1, 4, 2]) ^ set([3, 4]) == set_t([1, 2])
     oset2 = set([3, 1, 4]) ^ set_t([3, 4, 2])
-    assertEqual(oset2, set_t([1, 2]))
+    assert oset2 == set_t([1, 2])
 
 
 @pytest.mark.parametrize("set_t", stable_and_orderly_sets_except_sorted_set)
 def test_intersection_with_iterable(set_t):
-    assertEqual([1, 2, 3] & set_t([3, 2]), set_t([2, 3]))
-    assertEqual(set_t([3, 2] & set_t([1, 2, 3])), set_t([3, 2]))
+    assert [1, 2, 3] & set_t([3, 2]) == set_t([2, 3])
+    assert set_t([3, 2] & set_t([1, 2, 3])) == set_t([3, 2])
 
 
 @pytest.mark.parametrize("set_t", stable_and_orderly_sets_except_sorted_set)
 def test_difference_with_iterable(set_t):
-    assertEqual(set_t([1, 2, 3, 4]) - [3, 2], set_t([1, 4]))
-    assertEqual([3, 2, 4, 1] - set_t([2, 4]), set_t([3, 1]))
+    assert set_t([1, 2, 3, 4]) - [3, 2] == set_t([1, 4])
+    assert [3, 2, 4, 1] - set_t([2, 4]) == set_t([3, 1])
 
 
 @pytest.mark.parametrize("set_t", all_sets)
@@ -370,33 +388,33 @@ def test_isdisjoint(set_t):
 @pytest.mark.parametrize("set_t", stable_and_orderly_sets)
 def test_index(set_t):
     oset = set_t("abcd")
-    assertEqual(oset.index("b"), 1)
+    assert oset.index("b") == 1
 
 
 @pytest.mark.parametrize("set_t", stable_and_orderly_sets)
 def test_getitem(set_t):
     oset = set_t("abcd")
-    assertEqual(oset[2], "c")
+    assert oset[2] == "c"
 
 
 @pytest.mark.parametrize("set_t", stable_and_orderly_sets)
 def test_getitem_slice(set_t):
     oset = set_t("abcdef")
-    assertEqual(oset[:2], set_t("ab"))
-    assertEqual(oset[2:], set_t("cdef"))
-    assertEqual(oset[::-1], set_t("fedcba"))
-    assertEqual(oset[1:-1:2], set_t("bd"))
-    assertEqual(oset[1::2], set_t("bdf"))
+    assert oset[:2] == set_t("ab")
+    assert oset[2:] == set_t("cdef")
+    assert oset[::-1] == set_t("fedcba")
+    assert oset[1:-1:2] == set_t("bd")
+    assert oset[1::2] == set_t("bdf")
 
 
 @pytest.mark.parametrize("lst", datasets)
 @pytest.mark.parametrize("set_t", all_sets)
 def test_len(set_t, lst: list):
     oset = set_t(lst)
-    assertEqual(len(oset), len(lst))
+    assert len(oset) == len(lst)
 
     oset.remove(0)
-    assertEqual(len(oset), len(lst) - 1)
+    assert len(oset) == len(lst) - 1
 
 
 @pytest.mark.parametrize("lst", datasets)
@@ -427,17 +445,17 @@ def test_iter_mutated(set_t, lst: list):
 @pytest.mark.parametrize("set_t", all_sets)
 def test_iter_and_valid_order(set_t, lst: list):
     oset = set_t(lst)
-    assertEqual(list(oset), lst)
+    assert list(oset) == lst
 
     oset = set_t(lst + lst)
-    assertEqual(list(oset), lst)
+    assert list(oset) == lst
 
 
 @pytest.mark.parametrize("lst", datasets)
 @pytest.mark.parametrize("set_t", stable_and_orderly_sets)
 def test_reverse_order(set_t, lst: list):
     oset = set_t(lst)
-    assertEqual(list(reversed(oset)), list(reversed(lst)))
+    assert list(reversed(oset)) == list(reversed(lst))
 
 
 @pytest.mark.parametrize("lst", datasets)
@@ -448,21 +466,21 @@ def test_eq(set_t, lst: list):
 
     assertNotEqual(oset1, None)
 
-    assertEqual(oset1, oset2)
-    assertEqual(oset1, set(lst))
+    assert oset1 == oset2
+    assert oset1 == set(lst)
 
 
 @pytest.mark.parametrize("lst", datasets)
 @pytest.mark.parametrize("set_t", ordered_sets)
 def test_eq_list(set_t, lst: list):
-    assertEqual(set_t(lst), list(lst))
+    assert set_t(lst) == list(lst)
 
 
 @pytest.mark.parametrize("set_t", stable_and_orderly_sets)
 def test_repr(set_t):
     oset = set_t([1])
     set_class_name = set_t.__name__
-    assertEqual(repr(oset), f"{set_class_name}([1])")
+    assert repr(oset) == f"{set_class_name}([1])"
 
 
 @pytest.mark.parametrize("lst", datasets)
@@ -611,4 +629,4 @@ def test_eq_reversed_orderedset(set_t, lst: list):
 def test_eq_reversed_stableset(set_t, lst: list):
     oset1 = set_t(lst)
     oset2 = set_t(reversed(lst))
-    assertEqual(oset1, oset2)
+    assert oset1 == oset2

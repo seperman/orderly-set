@@ -579,7 +579,7 @@ class StableSet(MutableSet[T], Sequence[T]):
             [item for item in self._map if item not in items_to_remove]
         )
 
-    def intersection_update(self, other: SetLike[T]) -> None:
+    def intersection_update(self, other: SetLike[T]) -> T:
         """
         Update this StableSet to keep only items in another set, preserving
         their order in this set.
@@ -588,6 +588,7 @@ class StableSet(MutableSet[T], Sequence[T]):
             >>> this = StableSet([1, 4, 3, 5, 7])
             >>> other = StableSet([9, 7, 1, 3, 2])
             >>> this.intersection_update(other)
+            StableSet([1, 3, 7])
             >>> print(this)
             StableSet([1, 3, 7])
         """
@@ -595,6 +596,9 @@ class StableSet(MutableSet[T], Sequence[T]):
             raise ValueError("This object is not mutable.")
         other = set(other)
         self._map = dict.fromkeys([item for item in self._map if item in other])
+        return self
+
+    __iand__ = intersection_update
 
     def symmetric_difference_update(self, other: SetLike[T]) -> None:
         """
@@ -608,6 +612,8 @@ class StableSet(MutableSet[T], Sequence[T]):
             >>> print(this)
             StableSet([4, 5, 9, 2])
         """
+        if self._is_mutable is False:
+            raise ValueError("This object is not mutable.")
         items_to_add = [item for item in other if item not in self]
         items_to_remove = set(other)
         self._map = dict.fromkeys(
@@ -841,13 +847,15 @@ class OrderedSet(StableSet[T]):
         OrderedSet([1, 2, 3])
     """
 
-    __slots__ = ("_items",)
+    __slots__ = ("_items", "_is_mutable")
 
     _items: List[T]
 
     def __init__(self, initial: Optional[SetInitializer[T]] = None):
         self._items = []
         self._map = {}
+        self._is_mutable = True
+
         if initial is not None:
             # In terms of duck-typing, the default __ior__ is compatible with
             # the types we use, but it doesn't expect all the types we
@@ -935,16 +943,25 @@ class OrderedSet(StableSet[T]):
         )
 
     def clear(self) -> None:
+        if self._is_mutable is False:
+            raise ValueError("This object is not mutable.")
+
         del self._items[:]
         self._map.clear()
 
     def add(self, key: T) -> int:
+        if self._is_mutable is False:
+            raise ValueError("This object is not mutable.")
+
         if key not in self._map:
             self._map[key] = len(self._items)
             self._items.append(key)
         return self._map[key]
 
     def update(self, sequence: SetLike[T]) -> int:
+        if self._is_mutable is False:
+            raise ValueError("This object is not mutable.")
+
         item_index = 0
         for item in sequence:
             item_index = self.add(item)
@@ -956,6 +973,9 @@ class OrderedSet(StableSet[T]):
         return self._map[key]
 
     def pop(self, index: int = -1) -> T:
+        if self._is_mutable is False:
+            raise ValueError("This object is not mutable.")
+
         if not self._items:
             raise KeyError("Set is empty")
         elem = self._items[index]
@@ -964,6 +984,9 @@ class OrderedSet(StableSet[T]):
         return elem
 
     def popitem(self, last: bool = True):
+        if self._is_mutable is False:
+            raise ValueError("This object is not mutable.")
+
         if not self._items:
             raise KeyError("Set is empty")
         index = -1 if last else 0
@@ -973,6 +996,9 @@ class OrderedSet(StableSet[T]):
         return elem
 
     def move_to_end(self, key):
+        if self._is_mutable is False:
+            raise ValueError("This object is not mutable.")
+
         if key in self:
             self.discard(key)
             self.add(key)
@@ -980,6 +1006,9 @@ class OrderedSet(StableSet[T]):
             raise KeyError(key)
 
     def discard(self, key: T) -> None:
+        if self._is_mutable is False:
+            raise ValueError("This object is not mutable.")
+
         if key in self:
             i = self._map[key]
             del self._items[i]
@@ -997,6 +1026,9 @@ class OrderedSet(StableSet[T]):
         self._map = {item: idx for (idx, item) in enumerate(items)}
 
     def difference_update(self, *sets: SetLike[T]) -> None:
+        if self._is_mutable is False:
+            raise ValueError("This object is not mutable.")
+
         items_to_remove = set()  # type: Set[T]
         for other in sets:
             items_as_set = set(other)  # type: Set[T]
@@ -1005,11 +1037,20 @@ class OrderedSet(StableSet[T]):
             [item for item in self._items if item not in items_to_remove]
         )
 
-    def intersection_update(self, other: SetLike[T]) -> None:
+    def intersection_update(self, other: SetLike[T]) -> T:
+        if self._is_mutable is False:
+            raise ValueError("This object is not mutable.")
+
         other = set(other)
         self._update_items([item for item in self._items if item in other])
+        return self
+
+    __iand__ = intersection_update
 
     def symmetric_difference_update(self, other: SetLike[T]) -> None:
+        if self._is_mutable is False:
+            raise ValueError("This object is not mutable.")
+
         items_to_add = [item for item in other if item not in self]
         items_to_remove = set(other)
         self._update_items(
@@ -1020,6 +1061,8 @@ class OrderedSet(StableSet[T]):
 class SortedSet:
 
     def __init__(self, *args, set_=None, **kwargs):
+        self._is_mutable = True
+
         self._sorted = None
         if set_:
             self.set_ = set_
@@ -1062,6 +1105,9 @@ class SortedSet:
 
     def intersection_update(self, other):
         self.set_.intersection_update(other)
+        return self
+
+    __iand__ = intersection_update
 
     def __or__(self, other):
         # Union
