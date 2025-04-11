@@ -1,6 +1,6 @@
 from setuptools import setup
 
-version = '5.3.2'
+version = '5.4.0'
 
 
 with open('README.md') as file:
