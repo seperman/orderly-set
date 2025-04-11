@@ -356,16 +356,8 @@ class StableSet(MutableSet[T], Sequence[T]):
         self._map.update(other_map)
         return len(self._map) - 1
 
-    @overload
-    def index(self, key: Sequence[T]) -> List[int]:
-        ...
-
-    @overload
-    def index(self, key: T) -> int:
-        ...
-
     # concrete implementation
-    def index(self, key: Union[T, Sequence[T]]) -> Union[int, List[int]]:  # pyright: ignore
+    def index(self, value: Hashable) -> int:
         """
         Get the index of a given entry, raising an IndexError if it's not present
 
@@ -378,15 +370,15 @@ class StableSet(MutableSet[T], Sequence[T]):
             1
         """
         try:
-            if isinstance(key, Iterable) and not _is_atomic(key):
-                return [self.index(subkey) for subkey in key]
             for index, item in enumerate(self._map.keys()):
-                if item == key:
+                if item == value:
                     return index
-            raise KeyError(key)
-            # return list(self._map.keys()).index(key)
+            raise KeyError(value)
         except ValueError:
-            raise KeyError(key)
+            raise KeyError(value)
+
+    def indexes(self, keys: list[Hashable]) -> list[int]:
+        return [self.index(subkey) for subkey in keys]
 
     # Provide some compatibility with pd.Index
     get_loc = index
@@ -967,10 +959,11 @@ class OrderedSet(StableSet[T]):
             item_index = self.add(item)
         return item_index
 
-    def index(self, key):
-        if isinstance(key, Iterable) and not _is_atomic(key):
-            return [self.index(subkey) for subkey in key]
-        return self._map[key]
+    def index(self, value: Hashable) -> int:
+        return self._map[value]
+
+    def indexes(self, keys: list[Hashable]) -> list[int]:
+        return [self._map[key] for key in keys]
 
     def pop(self, index: int = -1) -> T:
         if self._is_mutable is False:
@@ -1221,7 +1214,7 @@ class SortedSet:
         else:
             raise TypeError(f"Don't know how to index a SortedSet by {index}")
 
-    def index(self, key):  # NOQA
+    def index(self, key: Hashable) -> Any:
         """
         Get the index of a given entry, raising an IndexError if it's not present
 
@@ -1241,9 +1234,11 @@ class SortedSet:
                 if item == key:
                     return index
             raise KeyError(key)
-            # return list(self._map.keys()).index(key)
         except ValueError:
             raise KeyError(key)
+
+    def indexes(self, keys: list[Hashable]) -> list[int]:
+        return [self.index(subkey) for subkey in keys]
 
     # Provide some compatibility with pd.Index
     get_loc = index

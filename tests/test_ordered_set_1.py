@@ -77,11 +77,11 @@ def test_indexing(set_t):
     if set_t is SortedSet:
         assert set1[[1, 2]] == ["b", "c"]
         assert set1[1:3] == set_t(["b", "c"])
-        assert set1.index(["b", "r"]) == [1, 4]
+        assert set1.indexes(["b", "r"]) == [1, 4]
     else:
         assert set1[[1, 2]] == ["b", "r"]
         assert set1[1:3] == set_t(["b", "r"])
-        assert set1.index(["b", "r"]) == [1, 2]
+        assert set1.indexes(["b", "r"]) == [1, 2]
     with pytest.raises(KeyError):
         set1.index("br")
 
@@ -122,14 +122,14 @@ def test_fancy_index_class(set_t):
 
 
 @pytest.mark.parametrize("set_t", stable_and_orderly_sets)
-def test_pandas_compat(set_t):
+def test_indexes(set_t):
     set1 = set_t("abracadabra")
     assert set1.get_loc("b") == 1
 
     if set_t is SortedSet:
-        assert set1.get_indexer(["b", "r"]) == [1, 4]
+        assert set1.indexes(["b", "r"]) == [1, 4]
     else:
-        assert set1.get_indexer(["b", "r"]) == [1, 2]
+        assert set1.indexes(["b", "r"]) == [1, 2]
 
 
 @pytest.mark.parametrize("set_t", stable_and_orderly_sets)

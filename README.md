@@ -81,7 +81,7 @@ operators like sets do.
     >>> letters
     OrderedSet(['r', 'x', 's', 'h', 'z', 'm'])
 
-The `__getitem__()` and `index()` methods have been extended to accept any
+The `__getitem__()` method has been extended to accept any
 iterable except a string, returning a list, to perform NumPy-like "fancy
 indexing".
 
@@ -90,7 +90,7 @@ indexing".
     >>> letters[[0, 2, 3]]
     ['a', 'r', 'c']
 
-    >>> letters.index(['a', 'r', 'c'])
+    >>> letters.indexes(['a', 'r', 'c'])
     [0, 2, 3]
 
 OrderedSet implements `__getstate__` and `__setstate__` so it can be pickled,

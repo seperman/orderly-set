@@ -2,6 +2,10 @@
 
 Significant changes in major and minor releases of this library:
 
+## Version 5.4.0 (2025)
+
+- index() is not compatible with pandas anymore. Instead use indexes when you need to get the indexes for multiple items.
+
 ## Version 5.3.2 (2025)
 
 - Better support for freezing sets.
