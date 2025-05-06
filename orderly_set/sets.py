@@ -377,7 +377,7 @@ class StableSet(MutableSet[T], Sequence[T]):
         except ValueError:
             raise KeyError(value)
 
-    def indexes(self, keys: list[Hashable]) -> list[int]:
+    def indexes(self, keys: List[Hashable]) -> List[int]:
         return [self.index(subkey) for subkey in keys]
 
     # Provide some compatibility with pd.Index
@@ -962,7 +962,7 @@ class OrderedSet(StableSet[T]):
     def index(self, value: Hashable) -> int:
         return self._map[value]
 
-    def indexes(self, keys: list[Hashable]) -> list[int]:
+    def indexes(self, keys: List[Hashable]) -> List[int]:
         return [self._map[key] for key in keys]
 
     def pop(self, index: int = -1) -> T:
@@ -1237,7 +1237,7 @@ class SortedSet:
         except ValueError:
             raise KeyError(key)
 
-    def indexes(self, keys: list[Hashable]) -> list[int]:
+    def indexes(self, keys: List[Hashable]) -> List[int]:
         return [self.index(subkey) for subkey in keys]
 
     # Provide some compatibility with pd.Index
