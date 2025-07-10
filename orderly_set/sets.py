@@ -15,12 +15,17 @@ from typing import (
     Union,
     overload,
     Hashable,
+    Deque,
+    Generic,
 )
+from collections import deque
+
 
 SLICE_ALL = slice(None)
 
 T = TypeVar("T")
 S = TypeVar("S", bound="StableSet")
+E = TypeVar('E', bound=Hashable)
 
 # SetLike[T] is either a set of elements of type T, or a sequence, which
 # we will convert to a StableSet or to an OrderedSet by adding its elements in order.
@@ -1273,3 +1278,61 @@ class SortedSet:
 
     def isorderedsuperset(self, other: SetLike, non_consecutive: bool = False) -> bool:
         return StableSet.isorderedsubset(other, self, non_consecutive)
+
+
+
+class RoughMaxSizeSet(Generic[E]):
+    """
+    A set-like container with a “soft” maximum size. When size exceeds
+    max_size + eviction_batch, it evicts oldest items down to max_size.
+    """
+
+    def __init__(self, max_size: int, eviction_batch: Optional[int] = None) -> None:
+        """
+        :param max_size: Target size you generally want to stay under.
+        :param eviction_batch: How many over-max to tolerate before trimming
+                               (defaults to 10% of max_size, minimum 1).
+        """
+        self.max_size: int = max_size
+        self.eviction_batch: int = eviction_batch or max(max_size // 10, 1)
+        self._dq: Deque[E] = deque()   # Maintain insertion order
+        self._set: Set[E] = set()      # For O(1) membership tests
+
+    def add(self, item: E) -> bool:
+        """
+        Add item if not present.
+        :returns: True if inserted, False if already there.
+        """
+        if item in self._set:
+            return False
+        self._dq.append(item)
+        self._set.add(item)
+        if len(self._set) > self.max_size + self.eviction_batch:
+            self._evict_to_size(self.max_size)
+        return True
+
+    def _evict_to_size(self, target_size: int) -> None:
+        """
+        Pop oldest items until our set is back down to target_size.
+        """
+        while len(self._set) > target_size:
+            old: E = self._dq.popleft()
+            self._set.discard(old)
+
+    def __contains__(self, item: E) -> bool:
+        return item in self._set
+
+    def __len__(self) -> int:
+        return len(self._set)
+
+    def __iter__(self) -> Iterator[E]:
+        """
+        Iteration order is arbitrary (follows set iteration), not insertion order.
+        """
+        return iter(self._set)
+
+    def __repr__(self) -> str:
+        return (
+            f"{self.__class__.__name__}("
+            f"{list(self._dq)!r}, max_size={self.max_size!r})"
+        )
