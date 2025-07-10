@@ -4,6 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "orderly-set"
+version = "5.4.1"
 authors = [
     {name = "Seperman", email = "sep@zepworks.com"},
 ]
@@ -24,7 +25,6 @@ classifiers = [
     "Development Status :: 5 - Production/Stable",
     "License :: OSI Approved :: MIT License"
 ]
-dynamic = ["version"]
 
 [project.optional-dependencies]
 coverage = [
