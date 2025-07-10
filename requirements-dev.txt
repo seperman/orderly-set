@@ -1,6 +1,0 @@
-pytest
-black
-mypy
-pre-commit
-pytest-cov
-bump2version==1.0.1

@@ -26,6 +26,29 @@ classifiers = [
 ]
 dynamic = ["version"]
 
+[project.optional-dependencies]
+coverage = [
+  "coverage~=7.6.0"
+]
+dev = [
+  "bump2version~=1.0.0",
+  "ipdb~=0.13.0",
+]
+static = [
+  "flake8~=7.1.0",
+  "flake8-pyproject~=1.2.3",
+]
+test = [
+  "pytest~=8.3.0",
+  "pytest-benchmark~=5.1.0",
+  "pytest-cov~=6.0.0",
+  "python-dotenv~=1.0.0",
+]
+optimize = [
+  "orjson",
+]
+
+
 [project.urls]
 Homepage = "https://github.com/seperman/orderly-set"
 Download = "https://github.com/seperman/orderly-set/tarball/master"
